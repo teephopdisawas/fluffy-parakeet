@@ -7,6 +7,12 @@
 
 NASBox is a lightweight, purpose-built Linux distribution designed specifically for Network Attached Storage (NAS) devices. It combines minimal resource usage with powerful features, Docker compatibility, and a custom lightweight GUI for easy management.
 
+## Demo
+
+![NASBox Dashboard Demo](docs/demo-screenshot.png)
+
+*NASBox Dashboard - Real-time system monitoring with CPU, memory, storage usage, network statistics, services status, and disk health overview.*
+
 ## Key Features
 
 ### 🐳 Docker Integration
