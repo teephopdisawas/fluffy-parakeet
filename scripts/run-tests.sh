@@ -37,6 +37,8 @@ REQUIRED_FILES=(
     "Makefile"
     "LICENSE"
     "base-system/kernel/config"
+    "base-system/kernel/config-x86_64"
+    "base-system/kernel/config-aarch64"
     "docker-support/daemon.json"
     "gui/index.html"
     "scripts/build-rootfs.sh"

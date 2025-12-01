@@ -60,7 +60,7 @@ NASBox is a lightweight, purpose-built Linux distribution designed specifically 
 ## System Requirements
 
 ### Minimum
-- 64-bit x86 processor (x86_64)
+- 64-bit processor (x86_64 or ARM64/aarch64)
 - 512MB RAM
 - 2GB storage for OS
 - 1+ storage drives for data
@@ -70,6 +70,10 @@ NASBox is a lightweight, purpose-built Linux distribution designed specifically 
 - 2GB+ RAM (4GB+ for Docker workloads)
 - 8GB+ storage for OS (SSD preferred)
 - Multiple storage drives for RAID
+
+### Supported Architectures
+- **x86_64** (Intel/AMD 64-bit): Standard PC servers and NAS devices
+- **aarch64/ARM64**: Raspberry Pi 4/5, ARM-based NAS devices, AWS Graviton
 
 ## Quick Start
 
@@ -83,8 +87,12 @@ cd fluffy-parakeet
 # Install build dependencies
 ./scripts/install-build-deps.sh
 
-# Build the distribution
+# Build the distribution (auto-detects architecture)
 make build
+
+# Or build for a specific architecture
+make build ARCH=x86_64   # For Intel/AMD
+make build ARCH=aarch64  # For ARM64
 
 # Create ISO image
 make iso

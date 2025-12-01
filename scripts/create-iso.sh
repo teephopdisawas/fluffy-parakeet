@@ -6,23 +6,43 @@ set -e
 
 BUILD_DIR=${1:-"build"}
 ISO_OUTPUT=${2:-"output/nasbox.iso"}
+ARCH=${3:-"x86_64"}
 
-echo "Creating NASBox ISO image..."
+# Normalize architecture names
+case "$ARCH" in
+    x86_64|amd64)
+        ARCH="x86_64"
+        ;;
+    aarch64|arm64)
+        ARCH="aarch64"
+        ;;
+    *)
+        echo "Error: Unsupported architecture: $ARCH"
+        echo "Supported architectures: x86_64, aarch64"
+        exit 1
+        ;;
+esac
+
+echo "Creating NASBox ISO image for $ARCH..."
 
 # Create ISO structure
 ISO_DIR="$BUILD_DIR/iso"
-mkdir -p "$ISO_DIR"/{boot/isolinux,EFI/BOOT,live}
+mkdir -p "$ISO_DIR"/{boot,EFI/BOOT,live}
 
-# Copy bootloader files
-cp /usr/lib/ISOLINUX/isolinux.bin "$ISO_DIR/boot/isolinux/" 2>/dev/null || \
-cp /usr/share/syslinux/isolinux.bin "$ISO_DIR/boot/isolinux/" 2>/dev/null || \
-echo "Note: isolinux.bin not found (install syslinux)"
-
-cp /usr/lib/syslinux/modules/bios/ldlinux.c32 "$ISO_DIR/boot/isolinux/" 2>/dev/null || \
-cp /usr/share/syslinux/ldlinux.c32 "$ISO_DIR/boot/isolinux/" 2>/dev/null || true
-
-# Create ISOLINUX configuration
-cat > "$ISO_DIR/boot/isolinux/isolinux.cfg" << 'EOF'
+if [ "$ARCH" = "x86_64" ]; then
+    # x86_64: Use ISOLINUX for BIOS boot
+    mkdir -p "$ISO_DIR/boot/isolinux"
+    
+    # Copy bootloader files
+    cp /usr/lib/ISOLINUX/isolinux.bin "$ISO_DIR/boot/isolinux/" 2>/dev/null || \
+    cp /usr/share/syslinux/isolinux.bin "$ISO_DIR/boot/isolinux/" 2>/dev/null || \
+    echo "Note: isolinux.bin not found (install syslinux)"
+    
+    cp /usr/lib/syslinux/modules/bios/ldlinux.c32 "$ISO_DIR/boot/isolinux/" 2>/dev/null || \
+    cp /usr/share/syslinux/ldlinux.c32 "$ISO_DIR/boot/isolinux/" 2>/dev/null || true
+    
+    # Create ISOLINUX configuration
+    cat > "$ISO_DIR/boot/isolinux/isolinux.cfg" << 'EOF'
 DEFAULT nasbox
 TIMEOUT 50
 PROMPT 1
@@ -53,6 +73,58 @@ LABEL memtest
     LINUX /boot/memtest
 EOF
 
+else
+    # aarch64: Use GRUB for EFI boot (ARM typically uses UEFI)
+    mkdir -p "$ISO_DIR/boot/grub"
+    
+    # Create GRUB configuration for ARM64
+    cat > "$ISO_DIR/boot/grub/grub.cfg" << 'EOF'
+set default=0
+set timeout=5
+
+menuentry "Start NASBox" {
+    linux /boot/vmlinuz root=/dev/ram0 init=/sbin/init quiet
+    initrd /boot/initramfs
+}
+
+menuentry "NASBox Debug Mode" {
+    linux /boot/vmlinuz root=/dev/ram0 init=/sbin/init debug
+    initrd /boot/initramfs
+}
+
+menuentry "Install NASBox" {
+    linux /boot/vmlinuz root=/dev/ram0 init=/sbin/init nasbox_install=1
+    initrd /boot/initramfs
+}
+EOF
+
+    # Create EFI boot configuration
+    cat > "$ISO_DIR/EFI/BOOT/grub.cfg" << 'EOF'
+search --no-floppy --set=root --label NASBOX
+set prefix=($root)/boot/grub
+configfile $prefix/grub.cfg
+EOF
+
+    # Copy or create ARM64 EFI bootloader
+    # Try to copy from common system locations
+    if [ -f "/usr/lib/grub/arm64-efi/grubaa64.efi" ]; then
+        cp /usr/lib/grub/arm64-efi/grubaa64.efi "$ISO_DIR/EFI/BOOT/bootaa64.efi"
+    elif [ -f "/usr/share/grub/arm64-efi/grubaa64.efi" ]; then
+        cp /usr/share/grub/arm64-efi/grubaa64.efi "$ISO_DIR/EFI/BOOT/bootaa64.efi"
+    elif command -v grub-mkimage &> /dev/null; then
+        # Create a minimal GRUB EFI image
+        grub-mkimage \
+            -O arm64-efi \
+            -o "$ISO_DIR/EFI/BOOT/bootaa64.efi" \
+            -p /boot/grub \
+            part_gpt part_msdos fat iso9660 normal boot linux configfile search \
+            2>/dev/null || echo "Note: Could not create ARM64 EFI bootloader (install grub-efi-arm64-bin)"
+    else
+        echo "Note: ARM64 EFI bootloader not found"
+        echo "Install grub-efi-arm64-bin or copy bootaa64.efi manually"
+    fi
+fi
+
 # Copy kernel and initramfs (if built)
 if [ -f "$BUILD_DIR/vmlinuz" ]; then
     cp "$BUILD_DIR/vmlinuz" "$ISO_DIR/boot/"
@@ -65,41 +137,86 @@ fi
 # Create squashfs from rootfs
 if [ -d "$BUILD_DIR/rootfs" ]; then
     echo "Creating squashfs filesystem..."
-    mksquashfs "$BUILD_DIR/rootfs" "$ISO_DIR/live/filesystem.squashfs" \
-        -comp xz -Xbcj x86 -b 1M -no-recovery 2>/dev/null || \
-    mksquashfs "$BUILD_DIR/rootfs" "$ISO_DIR/live/filesystem.squashfs" \
-        -comp gzip 2>/dev/null || \
-    echo "Note: mksquashfs failed (install squashfs-tools)"
+    if [ "$ARCH" = "x86_64" ]; then
+        mksquashfs "$BUILD_DIR/rootfs" "$ISO_DIR/live/filesystem.squashfs" \
+            -comp xz -Xbcj x86 -b 1M -no-recovery 2>/dev/null || \
+        mksquashfs "$BUILD_DIR/rootfs" "$ISO_DIR/live/filesystem.squashfs" \
+            -comp gzip 2>/dev/null || \
+        echo "Note: mksquashfs failed (install squashfs-tools)"
+    else
+        # ARM64 uses different BCJ filter
+        mksquashfs "$BUILD_DIR/rootfs" "$ISO_DIR/live/filesystem.squashfs" \
+            -comp xz -b 1M -no-recovery 2>/dev/null || \
+        mksquashfs "$BUILD_DIR/rootfs" "$ISO_DIR/live/filesystem.squashfs" \
+            -comp gzip 2>/dev/null || \
+        echo "Note: mksquashfs failed (install squashfs-tools)"
+    fi
 fi
 
 # Create the ISO
 echo "Building ISO..."
 mkdir -p "$(dirname "$ISO_OUTPUT")"
 
-xorriso -as mkisofs \
-    -o "$ISO_OUTPUT" \
-    -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin 2>/dev/null || \
-xorriso -as mkisofs \
-    -o "$ISO_OUTPUT" \
-    -isohybrid-mbr /usr/share/syslinux/isohdpfx.bin 2>/dev/null || \
-xorriso -as mkisofs \
-    -o "$ISO_OUTPUT" \
-    -c boot/isolinux/boot.cat \
-    -b boot/isolinux/isolinux.bin \
-    -no-emul-boot \
-    -boot-load-size 4 \
-    -boot-info-table \
-    "$ISO_DIR" 2>/dev/null || \
-genisoimage \
-    -o "$ISO_OUTPUT" \
-    -b boot/isolinux/isolinux.bin \
-    -c boot/isolinux/boot.cat \
-    -no-emul-boot \
-    -boot-load-size 4 \
-    -boot-info-table \
-    -J -R \
-    "$ISO_DIR" 2>/dev/null || \
-echo "Note: ISO creation requires xorriso or genisoimage"
+if [ "$ARCH" = "x86_64" ]; then
+    # x86_64: BIOS/UEFI hybrid boot
+    xorriso -as mkisofs \
+        -o "$ISO_OUTPUT" \
+        -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin 2>/dev/null || \
+    xorriso -as mkisofs \
+        -o "$ISO_OUTPUT" \
+        -isohybrid-mbr /usr/share/syslinux/isohdpfx.bin 2>/dev/null || \
+    xorriso -as mkisofs \
+        -o "$ISO_OUTPUT" \
+        -c boot/isolinux/boot.cat \
+        -b boot/isolinux/isolinux.bin \
+        -no-emul-boot \
+        -boot-load-size 4 \
+        -boot-info-table \
+        "$ISO_DIR" 2>/dev/null || \
+    genisoimage \
+        -o "$ISO_OUTPUT" \
+        -b boot/isolinux/isolinux.bin \
+        -c boot/isolinux/boot.cat \
+        -no-emul-boot \
+        -boot-load-size 4 \
+        -boot-info-table \
+        -J -R \
+        "$ISO_DIR" 2>/dev/null || \
+    echo "Note: ISO creation requires xorriso or genisoimage"
+else
+    # ARM64: EFI boot only
+    # Only add EFI boot option if bootloader exists
+    if [ -f "$ISO_DIR/EFI/BOOT/bootaa64.efi" ]; then
+        xorriso -as mkisofs \
+            -o "$ISO_OUTPUT" \
+            -V "NASBOX" \
+            -e EFI/BOOT/bootaa64.efi \
+            -no-emul-boot \
+            -J -R \
+            "$ISO_DIR" 2>/dev/null || \
+        genisoimage \
+            -o "$ISO_OUTPUT" \
+            -V "NASBOX" \
+            -J -R \
+            "$ISO_DIR" 2>/dev/null || \
+        echo "Note: ISO creation requires xorriso or genisoimage"
+    else
+        # Create ISO without EFI boot (can still boot via GRUB rescue or chainload)
+        xorriso -as mkisofs \
+            -o "$ISO_OUTPUT" \
+            -V "NASBOX" \
+            -J -R \
+            "$ISO_DIR" 2>/dev/null || \
+        genisoimage \
+            -o "$ISO_OUTPUT" \
+            -V "NASBOX" \
+            -J -R \
+            "$ISO_DIR" 2>/dev/null || \
+        echo "Note: ISO creation requires xorriso or genisoimage"
+        echo "Warning: EFI bootloader not found. ISO may not boot on UEFI systems."
+        echo "Install grub-efi-arm64-bin and rebuild for full ARM64 UEFI support."
+    fi
+fi
 
 if [ -f "$ISO_OUTPUT" ]; then
     echo "ISO created: $ISO_OUTPUT"
