@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NASBox - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="themes/style.css">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
@@ -15,6 +18,21 @@
                 <img src="assets/logo.svg" alt="NASBox" class="logo">
                 <h1>NASBox</h1>
             </div>
+            
+            <!-- Theme Selector -->
+            <div class="theme-selector">
+                <label for="themeSelect">Theme</label>
+                <select id="themeSelect" class="theme-dropdown">
+                    <option value="dark">🌙 Dark</option>
+                    <option value="light">☀️ Light</option>
+                    <option value="ocean">🌊 Ocean Blue</option>
+                    <option value="forest">🌲 Forest Green</option>
+                    <option value="sunset">🌅 Sunset Orange</option>
+                    <option value="midnight">🔮 Midnight Purple</option>
+                    <option value="contrast">⚡ High Contrast</option>
+                </select>
+            </div>
+            
             <ul class="nav-menu">
                 <li class="nav-item active" data-page="dashboard">
                     <span class="nav-icon">📊</span>
@@ -46,7 +64,6 @@
                 </li>
             </ul>
             <div class="sidebar-footer">
-                <button class="theme-toggle" id="themeToggle">🌙</button>
                 <span class="version">v1.0.0</span>
             </div>
         </nav>
