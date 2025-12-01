@@ -104,6 +104,25 @@ search --no-floppy --set=root --label NASBOX
 set prefix=($root)/boot/grub
 configfile $prefix/grub.cfg
 EOF
+
+    # Copy or create ARM64 EFI bootloader
+    # Try to copy from common system locations
+    if [ -f "/usr/lib/grub/arm64-efi/grubaa64.efi" ]; then
+        cp /usr/lib/grub/arm64-efi/grubaa64.efi "$ISO_DIR/EFI/BOOT/bootaa64.efi"
+    elif [ -f "/usr/share/grub/arm64-efi/grubaa64.efi" ]; then
+        cp /usr/share/grub/arm64-efi/grubaa64.efi "$ISO_DIR/EFI/BOOT/bootaa64.efi"
+    elif command -v grub-mkimage &> /dev/null; then
+        # Create a minimal GRUB EFI image
+        grub-mkimage \
+            -O arm64-efi \
+            -o "$ISO_DIR/EFI/BOOT/bootaa64.efi" \
+            -p /boot/grub \
+            part_gpt part_msdos fat iso9660 normal boot linux configfile search \
+            2>/dev/null || echo "Note: Could not create ARM64 EFI bootloader (install grub-efi-arm64-bin)"
+    else
+        echo "Note: ARM64 EFI bootloader not found"
+        echo "Install grub-efi-arm64-bin or copy bootaa64.efi manually"
+    fi
 fi
 
 # Copy kernel and initramfs (if built)
@@ -166,19 +185,37 @@ if [ "$ARCH" = "x86_64" ]; then
     echo "Note: ISO creation requires xorriso or genisoimage"
 else
     # ARM64: EFI boot only
-    xorriso -as mkisofs \
-        -o "$ISO_OUTPUT" \
-        -V "NASBOX" \
-        -e EFI/BOOT/bootaa64.efi \
-        -no-emul-boot \
-        -J -R \
-        "$ISO_DIR" 2>/dev/null || \
-    genisoimage \
-        -o "$ISO_OUTPUT" \
-        -V "NASBOX" \
-        -J -R \
-        "$ISO_DIR" 2>/dev/null || \
-    echo "Note: ISO creation requires xorriso or genisoimage"
+    # Only add EFI boot option if bootloader exists
+    if [ -f "$ISO_DIR/EFI/BOOT/bootaa64.efi" ]; then
+        xorriso -as mkisofs \
+            -o "$ISO_OUTPUT" \
+            -V "NASBOX" \
+            -e EFI/BOOT/bootaa64.efi \
+            -no-emul-boot \
+            -J -R \
+            "$ISO_DIR" 2>/dev/null || \
+        genisoimage \
+            -o "$ISO_OUTPUT" \
+            -V "NASBOX" \
+            -J -R \
+            "$ISO_DIR" 2>/dev/null || \
+        echo "Note: ISO creation requires xorriso or genisoimage"
+    else
+        # Create ISO without EFI boot (can still boot via GRUB rescue or chainload)
+        xorriso -as mkisofs \
+            -o "$ISO_OUTPUT" \
+            -V "NASBOX" \
+            -J -R \
+            "$ISO_DIR" 2>/dev/null || \
+        genisoimage \
+            -o "$ISO_OUTPUT" \
+            -V "NASBOX" \
+            -J -R \
+            "$ISO_DIR" 2>/dev/null || \
+        echo "Note: ISO creation requires xorriso or genisoimage"
+        echo "Warning: EFI bootloader not found. ISO may not boot on UEFI systems."
+        echo "Install grub-efi-arm64-bin and rebuild for full ARM64 UEFI support."
+    fi
 fi
 
 if [ -f "$ISO_OUTPUT" ]; then
