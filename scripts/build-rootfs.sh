@@ -6,12 +6,30 @@ set -e
 
 ROOTFS_DIR=${1:-"build/rootfs"}
 ALPINE_VERSION=${2:-"3.19"}
+ARCH=${3:-"x86_64"}
 ALPINE_MIRROR="https://dl-cdn.alpinelinux.org/alpine"
-ARCH="x86_64"
+
+# Normalize architecture names
+case "$ARCH" in
+    x86_64|amd64)
+        ARCH="x86_64"
+        ALPINE_ARCH="x86_64"
+        ;;
+    aarch64|arm64)
+        ARCH="aarch64"
+        ALPINE_ARCH="aarch64"
+        ;;
+    *)
+        echo "Error: Unsupported architecture: $ARCH"
+        echo "Supported architectures: x86_64, aarch64"
+        exit 1
+        ;;
+esac
 
 echo "Building NASBox root filesystem..."
 echo "Target: $ROOTFS_DIR"
 echo "Alpine Version: $ALPINE_VERSION"
+echo "Architecture: $ARCH"
 
 # Create directory structure
 mkdir -p "$ROOTFS_DIR"/{bin,sbin,etc,proc,sys,dev,tmp,var,usr,home,root,mnt/storage}
@@ -19,10 +37,10 @@ mkdir -p "$ROOTFS_DIR"/etc/{nasbox,docker,samba,init.d}
 mkdir -p "$ROOTFS_DIR"/var/{log/nasbox,lib/docker,run}
 
 # Download Alpine minirootfs
-MINIROOTFS="alpine-minirootfs-${ALPINE_VERSION}.0-${ARCH}.tar.gz"
+MINIROOTFS="alpine-minirootfs-${ALPINE_VERSION}.0-${ALPINE_ARCH}.tar.gz"
 if [ ! -f "/tmp/$MINIROOTFS" ]; then
     echo "Downloading Alpine minirootfs..."
-    wget -q "${ALPINE_MIRROR}/v${ALPINE_VERSION}/releases/${ARCH}/${MINIROOTFS}" -O "/tmp/${MINIROOTFS}" || {
+    wget -q "${ALPINE_MIRROR}/v${ALPINE_VERSION}/releases/${ALPINE_ARCH}/${MINIROOTFS}" -O "/tmp/${MINIROOTFS}" || {
         echo "Note: Could not download Alpine minirootfs (offline mode)"
         echo "Creating minimal structure instead..."
     }
@@ -45,8 +63,9 @@ NAME="NASBox"
 VERSION="1.0.0"
 ID=nasbox
 VERSION_ID=1.0.0
-PRETTY_NAME="NASBox 1.0.0"
+PRETTY_NAME="NASBox 1.0.0 ($ARCH)"
 HOME_URL="https://github.com/teephopdisawas/fluffy-parakeet"
+ARCH="$ARCH"
 EOF
 
 # Create /etc/os-release symlink
