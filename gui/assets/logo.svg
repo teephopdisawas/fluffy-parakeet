@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="nasboxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e94560;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- NAS Box shape -->
+  <rect x="15" y="25" width="70" height="50" rx="8" fill="url(#nasboxGrad)"/>
+  <!-- Drive slots -->
+  <rect x="22" y="32" width="12" height="36" rx="2" fill="#1a1a2e" opacity="0.8"/>
+  <rect x="37" y="32" width="12" height="36" rx="2" fill="#1a1a2e" opacity="0.8"/>
+  <rect x="52" y="32" width="12" height="36" rx="2" fill="#1a1a2e" opacity="0.8"/>
+  <rect x="67" y="32" width="12" height="36" rx="2" fill="#1a1a2e" opacity="0.8"/>
+  <!-- Activity LEDs -->
+  <circle cx="25" cy="72" r="2" fill="#00d26a">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="43" cy="72" r="2" fill="#00d26a">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="58" cy="72" r="2" fill="#00d26a">
+    <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="73" cy="72" r="2" fill="#ffc107"/>
+</svg>

@@ -1,0 +1,54 @@
+#!/sbin/openrc-run
+# NASBox Init Configuration
+# OpenRC-based lightweight init system
+
+name="NASBox System"
+description="NASBox Network Attached Storage System"
+
+# System runlevels
+# sysinit -> boot -> default -> shutdown
+
+depend() {
+    need localmount
+    after bootmisc
+}
+
+start_pre() {
+    # Load essential kernel modules
+    modprobe overlay
+    modprobe nfs
+    modprobe nfsd
+    modprobe bonding
+    modprobe br_netfilter
+    
+    # Enable IP forwarding for Docker
+    echo 1 > /proc/sys/net/ipv4/ip_forward
+    
+    # Set kernel parameters for NAS performance
+    echo 262144 > /proc/sys/net/core/rmem_max
+    echo 262144 > /proc/sys/net/core/wmem_max
+    
+    return 0
+}
+
+start() {
+    ebegin "Starting NASBox services"
+    
+    # Start essential services in order
+    rc-service networking start
+    rc-service docker start
+    rc-service nasbox-api start
+    rc-service nasbox-gui start
+    
+    eend $?
+}
+
+stop() {
+    ebegin "Stopping NASBox services"
+    
+    rc-service nasbox-gui stop
+    rc-service nasbox-api stop
+    rc-service docker stop
+    
+    eend $?
+}

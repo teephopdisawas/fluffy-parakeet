@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASBox - Dashboard</title>
+    <link rel="stylesheet" href="themes/style.css">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="assets/logo.svg" alt="NASBox" class="logo">
+                <h1>NASBox</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </li>
+                <li class="nav-item" data-page="storage">
+                    <span class="nav-icon">💾</span>
+                    <span class="nav-text">Storage</span>
+                </li>
+                <li class="nav-item" data-page="shares">
+                    <span class="nav-icon">📁</span>
+                    <span class="nav-text">Shares</span>
+                </li>
+                <li class="nav-item" data-page="docker">
+                    <span class="nav-icon">🐳</span>
+                    <span class="nav-text">Docker</span>
+                </li>
+                <li class="nav-item" data-page="network">
+                    <span class="nav-icon">🌐</span>
+                    <span class="nav-text">Network</span>
+                </li>
+                <li class="nav-item" data-page="users">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Users</span>
+                </li>
+                <li class="nav-item" data-page="system">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">System</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="themeToggle">🌙</button>
+                <span class="version">v1.0.0</span>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <h2 id="pageTitle">Dashboard</h2>
+                <div class="header-actions">
+                    <span class="hostname">nasbox.local</span>
+                    <button class="btn-icon" title="Notifications">🔔</button>
+                    <button class="btn-icon" title="Logout">🚪</button>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="content" id="content">
+                <!-- System Overview Cards -->
+                <section class="card-grid" id="dashboardPage">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>CPU Usage</h3>
+                            <span class="card-icon">⚡</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="progress-ring" data-value="25">
+                                <span class="progress-value" id="cpuValue">25%</span>
+                            </div>
+                            <p class="card-detail">4 Cores @ 2.4 GHz</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Memory</h3>
+                            <span class="card-icon">🧠</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="progress-ring" data-value="45">
+                                <span class="progress-value" id="memValue">45%</span>
+                            </div>
+                            <p class="card-detail">1.8 GB / 4 GB</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Storage</h3>
+                            <span class="card-icon">💿</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="progress-ring" data-value="62">
+                                <span class="progress-value" id="storageValue">62%</span>
+                            </div>
+                            <p class="card-detail">6.2 TB / 10 TB</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Network</h3>
+                            <span class="card-icon">📡</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="network-stats">
+                                <div class="stat">
+                                    <span class="stat-label">↓ Download</span>
+                                    <span class="stat-value" id="netDown">125 MB/s</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">↑ Upload</span>
+                                    <span class="stat-value" id="netUp">45 MB/s</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Services Status -->
+                <section class="services-section">
+                    <h3>Services Status</h3>
+                    <div class="services-grid">
+                        <div class="service-item running">
+                            <span class="service-status"></span>
+                            <span class="service-name">Samba</span>
+                            <button class="btn-small">Restart</button>
+                        </div>
+                        <div class="service-item running">
+                            <span class="service-status"></span>
+                            <span class="service-name">NFS</span>
+                            <button class="btn-small">Restart</button>
+                        </div>
+                        <div class="service-item running">
+                            <span class="service-status"></span>
+                            <span class="service-name">Docker</span>
+                            <button class="btn-small">Restart</button>
+                        </div>
+                        <div class="service-item stopped">
+                            <span class="service-status"></span>
+                            <span class="service-name">FTP</span>
+                            <button class="btn-small">Start</button>
+                        </div>
+                        <div class="service-item running">
+                            <span class="service-status"></span>
+                            <span class="service-name">SSH</span>
+                            <button class="btn-small">Restart</button>
+                        </div>
+                        <div class="service-item running">
+                            <span class="service-status"></span>
+                            <span class="service-name">SMART Monitor</span>
+                            <button class="btn-small">Restart</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Disk Health -->
+                <section class="disks-section">
+                    <h3>Disk Health</h3>
+                    <div class="disks-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Disk</th>
+                                    <th>Model</th>
+                                    <th>Capacity</th>
+                                    <th>Temperature</th>
+                                    <th>Health</th>
+                                </tr>
+                            </thead>
+                            <tbody id="diskTable">
+                                <tr>
+                                    <td>/dev/sda</td>
+                                    <td>WD Red 4TB</td>
+                                    <td>4 TB</td>
+                                    <td>35°C</td>
+                                    <td><span class="health-good">Good</span></td>
+                                </tr>
+                                <tr>
+                                    <td>/dev/sdb</td>
+                                    <td>WD Red 4TB</td>
+                                    <td>4 TB</td>
+                                    <td>36°C</td>
+                                    <td><span class="health-good">Good</span></td>
+                                </tr>
+                                <tr>
+                                    <td>/dev/sdc</td>
+                                    <td>Seagate IronWolf 2TB</td>
+                                    <td>2 TB</td>
+                                    <td>38°C</td>
+                                    <td><span class="health-warning">Warning</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="components/app.js"></script>
+</body>
+</html>

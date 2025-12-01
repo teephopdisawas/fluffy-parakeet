@@ -1,0 +1,25 @@
+# NASBox NFS Exports Configuration
+# Network File System shares
+
+# Export format:
+# <path> <host(options)> [host(options)] ...
+
+# Public share - read-only for all
+/mnt/storage/public *(ro,sync,no_subtree_check,all_squash,anonuid=65534,anongid=65534)
+
+# Media share - read-only for local network
+/mnt/storage/media 192.168.0.0/16(ro,sync,no_subtree_check,all_squash)
+/mnt/storage/media 10.0.0.0/8(ro,sync,no_subtree_check,all_squash)
+
+# Documents share - read-write for local network
+/mnt/storage/documents 192.168.0.0/16(rw,sync,no_subtree_check,no_root_squash)
+/mnt/storage/documents 10.0.0.0/8(rw,sync,no_subtree_check,no_root_squash)
+
+# Backups share - read-write for specific hosts
+/mnt/storage/backups 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
+
+# VMware/ESXi datastore
+/mnt/storage/vmware 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash,insecure)
+
+# Kubernetes PVs
+/mnt/storage/k8s 192.168.1.0/24(rw,sync,no_subtree_check,no_root_squash)
