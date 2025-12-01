@@ -1,11 +1,12 @@
 /**
  * NASBox GUI - Main Application JavaScript
  * Lightweight management interface for NAS
+ * Modern multi-theme support
  */
 
 class NASBoxApp {
     // Allowed theme values for security
-    static ALLOWED_THEMES = ['dark', 'light'];
+    static ALLOWED_THEMES = ['dark', 'light', 'ocean', 'forest', 'sunset', 'midnight', 'contrast'];
     
     constructor() {
         this.currentPage = 'dashboard';
@@ -30,24 +31,28 @@ class NASBoxApp {
             theme = 'dark';
         }
         document.documentElement.setAttribute('data-theme', theme);
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        const themeSelect = document.getElementById('themeSelect');
+        if (themeSelect) {
+            themeSelect.value = theme;
         }
         localStorage.setItem('nasbox-theme', theme);
+        this.theme = theme;
     }
 
-    toggleTheme() {
-        this.theme = this.theme === 'dark' ? 'light' : 'dark';
-        this.applyTheme(this.theme);
+    setTheme(theme) {
+        if (NASBoxApp.ALLOWED_THEMES.includes(theme)) {
+            this.applyTheme(theme);
+        }
     }
 
     // Event Bindings
     bindEvents() {
-        // Theme toggle
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => this.toggleTheme());
+        // Theme selector dropdown
+        const themeSelect = document.getElementById('themeSelect');
+        if (themeSelect) {
+            themeSelect.addEventListener('change', (e) => {
+                this.setTheme(e.target.value);
+            });
         }
 
         // Mobile menu toggle
