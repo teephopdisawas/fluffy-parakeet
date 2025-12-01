@@ -31,18 +31,33 @@ if [ ! -f "$FIRSTBOOT_FLAG" ]; then
     # Generate SSH host keys
     ssh-keygen -A
     
-    # Set default passwords (user should change these)
-    echo "root:nasbox" | chpasswd
+    # Generate random initial passwords for security
+    # Users MUST change these on first login
+    RANDOM_PASS=$(head -c 12 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 12)
+    echo "root:${RANDOM_PASS}" | chpasswd
     
-    # Create nasbox admin user
+    # Create nasbox admin user with random password
     adduser -D -g "NASBox Admin" admin
-    echo "admin:admin" | chpasswd
+    ADMIN_PASS=$(head -c 12 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c 12)
+    echo "admin:${ADMIN_PASS}" | chpasswd
     addgroup admin wheel
     addgroup admin docker 2>/dev/null || true
     
-    # Initialize storage directories
+    # Save initial credentials to secure file (readable only by root)
+    echo "Initial Passwords (CHANGE IMMEDIATELY):" > /root/.initial-credentials
+    echo "root: ${RANDOM_PASS}" >> /root/.initial-credentials
+    echo "admin: ${ADMIN_PASS}" >> /root/.initial-credentials
+    chmod 600 /root/.initial-credentials
+    
+    # Force password change on first login
+    passwd -e root
+    passwd -e admin
+    
+    # Initialize storage directories with secure permissions
     mkdir -p /mnt/storage/{public,documents,media,backups,downloads,timemachine}
-    chmod 777 /mnt/storage/public
+    # Public share: group writable, not world writable
+    chmod 775 /mnt/storage/public
+    chown root:users /mnt/storage/public
     chmod 755 /mnt/storage/media
     
     # Enable default services
@@ -57,6 +72,8 @@ if [ ! -f "$FIRSTBOOT_FLAG" ]; then
     touch "$FIRSTBOOT_FLAG"
     
     echo "NASBox: First boot configuration complete!"
+    echo "Initial credentials saved to /root/.initial-credentials"
+    echo "You will be required to change passwords on first login."
     echo "Access the web GUI at http://$(hostname -I | awk '{print $1}'):8080"
 fi
 EOF
@@ -74,9 +91,9 @@ cat > "$ROOTFS/etc/motd" << 'EOF'
  Lightweight NAS Linux Distribution
  
  Web GUI: http://nasbox.local:8080
- Default credentials: admin / admin
  
- Please change your password after first login!
+ Initial credentials are in /root/.initial-credentials
+ You MUST change your password on first login!
 
 EOF
 

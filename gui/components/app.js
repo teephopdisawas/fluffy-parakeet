@@ -4,9 +4,14 @@
  */
 
 class NASBoxApp {
+    // Allowed theme values for security
+    static ALLOWED_THEMES = ['dark', 'light'];
+    
     constructor() {
         this.currentPage = 'dashboard';
-        this.theme = localStorage.getItem('nasbox-theme') || 'dark';
+        // Validate theme from localStorage against allowed values
+        const storedTheme = localStorage.getItem('nasbox-theme');
+        this.theme = NASBoxApp.ALLOWED_THEMES.includes(storedTheme) ? storedTheme : 'dark';
         this.apiBase = '/api/v1';
         this.init();
     }
@@ -20,6 +25,10 @@ class NASBoxApp {
 
     // Theme Management
     applyTheme(theme) {
+        // Validate theme value before applying
+        if (!NASBoxApp.ALLOWED_THEMES.includes(theme)) {
+            theme = 'dark';
+        }
         document.documentElement.setAttribute('data-theme', theme);
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {

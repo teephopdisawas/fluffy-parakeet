@@ -96,6 +96,9 @@ cat > "$ROOTFS_DIR/usr/local/bin/nasbox-api" << 'APIEOF'
 """
 NASBox API Backend
 Provides REST API for the management GUI
+
+Security Note: This API uses subprocess for system commands but only with
+predefined arguments - no user input is passed to shell commands.
 """
 
 import json
@@ -105,7 +108,11 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
 class NASBoxAPI(BaseHTTPRequestHandler):
-    """Simple API handler for NASBox management"""
+    """Simple API handler for NASBox management
+    
+    Security: All subprocess calls use fixed command arguments.
+    No user input is interpolated into shell commands.
+    """
     
     def _set_headers(self, status=200, content_type='application/json'):
         self.send_response(status)
