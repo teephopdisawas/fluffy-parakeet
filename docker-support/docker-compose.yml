@@ -1,0 +1,151 @@
+# NASBox Docker Compose - Pre-installed Applications
+# Optional services that can be enabled via GUI
+
+version: '3.8'
+
+services:
+  # Portainer - Docker Management UI
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    profiles:
+      - management
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    labels:
+      - "nasbox.category=management"
+      - "nasbox.description=Docker Container Management"
+
+  # Nextcloud - Personal Cloud
+  nextcloud:
+    image: nextcloud:latest
+    container_name: nextcloud
+    restart: unless-stopped
+    profiles:
+      - cloud
+    ports:
+      - "8081:80"
+    volumes:
+      - nextcloud_data:/var/www/html
+      - /mnt/storage/nextcloud:/var/www/html/data
+    environment:
+      - MYSQL_HOST=nextcloud-db
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD_FILE=/run/secrets/db_password
+    labels:
+      - "nasbox.category=cloud"
+      - "nasbox.description=Personal Cloud Storage"
+
+  # Plex Media Server
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    restart: unless-stopped
+    profiles:
+      - media
+    network_mode: host
+    volumes:
+      - plex_config:/config
+      - /mnt/storage/media:/media
+    environment:
+      - TZ=UTC
+      - PLEX_CLAIM=${PLEX_CLAIM:-}
+    labels:
+      - "nasbox.category=media"
+      - "nasbox.description=Media Server"
+
+  # Jellyfin - Free Media Server
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    profiles:
+      - media
+    ports:
+      - "8096:8096"
+    volumes:
+      - jellyfin_config:/config
+      - jellyfin_cache:/cache
+      - /mnt/storage/media:/media:ro
+    labels:
+      - "nasbox.category=media"
+      - "nasbox.description=Free Media Server"
+
+  # Transmission - BitTorrent Client
+  transmission:
+    image: linuxserver/transmission:latest
+    container_name: transmission
+    restart: unless-stopped
+    profiles:
+      - downloads
+    ports:
+      - "9091:9091"
+      - "51413:51413"
+      - "51413:51413/udp"
+    volumes:
+      - transmission_config:/config
+      - /mnt/storage/downloads:/downloads
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    labels:
+      - "nasbox.category=downloads"
+      - "nasbox.description=BitTorrent Client"
+
+  # Home Assistant - Home Automation
+  homeassistant:
+    image: homeassistant/home-assistant:stable
+    container_name: homeassistant
+    restart: unless-stopped
+    profiles:
+      - automation
+    network_mode: host
+    volumes:
+      - homeassistant_config:/config
+    environment:
+      - TZ=UTC
+    labels:
+      - "nasbox.category=automation"
+      - "nasbox.description=Home Automation"
+
+  # Pi-hole - Network Ad Blocker
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: unless-stopped
+    profiles:
+      - network
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8082:80"
+    volumes:
+      - pihole_config:/etc/pihole
+      - pihole_dnsmasq:/etc/dnsmasq.d
+    environment:
+      - TZ=UTC
+      - WEBPASSWORD_FILE=/run/secrets/pihole_password
+    labels:
+      - "nasbox.category=network"
+      - "nasbox.description=Network Ad Blocker"
+
+volumes:
+  portainer_data:
+  nextcloud_data:
+  plex_config:
+  jellyfin_config:
+  jellyfin_cache:
+  transmission_config:
+  homeassistant_config:
+  pihole_config:
+  pihole_dnsmasq:
+
+networks:
+  default:
+    name: nasbox-network

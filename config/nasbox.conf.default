@@ -1,0 +1,134 @@
+# NASBox Default Configuration
+# Version 1.0.0
+
+[general]
+# System hostname
+hostname = nasbox
+
+# Timezone (IANA format)
+timezone = UTC
+
+# System language
+language = en_US.UTF-8
+
+# Web GUI port
+gui_port = 8080
+
+# Enable SSL for web GUI
+gui_ssl = false
+
+[storage]
+# Default storage pool name
+default_pool = main
+
+# Mount point for storage pools
+mount_base = /mnt/storage
+
+# Enable SMART monitoring
+smart_monitoring = true
+
+# SMART check interval (hours)
+smart_interval = 24
+
+# Temperature warning threshold (Celsius)
+temp_warning = 45
+
+# Temperature critical threshold (Celsius)
+temp_critical = 55
+
+# Snapshot schedule (none, hourly, daily, weekly)
+snapshot_schedule = daily
+
+# Number of snapshots to keep
+snapshot_keep = 7
+
+# Enable automatic scrub
+auto_scrub = true
+
+# Scrub interval (days)
+scrub_interval = 30
+
+[network]
+# Enable mDNS/Avahi
+mdns_enabled = true
+
+# Enable network discovery
+auto_discovery = true
+
+# Default network interface
+default_interface = eth0
+
+[services]
+# SMB/CIFS file sharing
+samba_enabled = true
+samba_workgroup = NASBOX
+
+# NFS file sharing
+nfs_enabled = true
+
+# SSH access
+ssh_enabled = true
+ssh_port = 22
+
+# FTP access (disabled by default for security)
+ftp_enabled = false
+
+# Docker
+docker_enabled = true
+
+# Web GUI
+gui_enabled = true
+
+[security]
+# Enable firewall
+firewall_enabled = true
+
+# Enable automatic security updates
+auto_updates = true
+
+# Enable fail2ban
+fail2ban_enabled = true
+
+# Maximum login attempts before ban
+max_login_attempts = 5
+
+# Ban duration (seconds)
+ban_duration = 600
+
+# Session timeout (minutes)
+session_timeout = 30
+
+[notifications]
+# Email notifications
+email_enabled = false
+smtp_server = 
+smtp_port = 587
+smtp_user = 
+smtp_password = 
+notification_email = 
+
+# Push notifications (Pushover, etc.)
+push_enabled = false
+
+[backup]
+# Enable scheduled backups
+backup_enabled = false
+
+# Backup schedule (cron format)
+backup_schedule = 0 2 * * *
+
+# Backup destination
+backup_destination = 
+
+# Backup retention (days)
+backup_retention = 30
+
+[docker]
+# Docker storage driver
+storage_driver = overlay2
+
+# Enable Docker metrics
+metrics_enabled = true
+
+# Default network for containers
+default_network = nasbox-network
