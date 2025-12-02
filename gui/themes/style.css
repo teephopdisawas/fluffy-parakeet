@@ -186,13 +186,20 @@
 
 /* Glassy Theme - Glassmorphism Design */
 [data-theme="glassy"] {
-    --bg-primary: linear-gradient(135deg, #1a1a3e 0%, #2d1b4e 50%, #1a2a4a 100%);
+    --bg-primary: #1a1a3e;
+    --bg-gradient: linear-gradient(135deg, #1a1a3e 0%, #2d1b4e 50%, #1a2a4a 100%);
     --bg-secondary: rgba(255, 255, 255, 0.05);
     --bg-card: rgba(255, 255, 255, 0.1);
     --bg-card-hover: rgba(255, 255, 255, 0.15);
     --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-bg-light: rgba(255, 255, 255, 0.06);
+    --glass-bg-lighter: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-border-light: rgba(255, 255, 255, 0.15);
+    --glass-border-lighter: rgba(255, 255, 255, 0.1);
     --glass-blur: 20px;
+    --glass-blur-sm: 16px;
+    --glass-blur-xs: 10px;
     --text-primary: #ffffff;
     --text-secondary: rgba(255, 255, 255, 0.7);
     --text-on-accent: #1a1a3e;
@@ -211,7 +218,7 @@
 
 /* Glassy theme background needs special handling */
 [data-theme="glassy"] body {
-    background: linear-gradient(135deg, #1a1a3e 0%, #2d1b4e 50%, #1a2a4a 100%);
+    background: var(--bg-gradient);
     background-attachment: fixed;
 }
 
@@ -220,45 +227,45 @@
 }
 
 [data-theme="glassy"] .sidebar {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-right: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-right: 1px solid var(--glass-border-light);
+    box-shadow: 0 8px 32px var(--shadow);
 }
 
 [data-theme="glassy"] .card,
 [data-theme="glassy"] .page-section,
 [data-theme="glassy"] .services-section,
 [data-theme="glassy"] .disks-section {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur-sm));
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+    border: 1px solid var(--glass-border-light);
+    box-shadow: 0 8px 32px var(--shadow);
 }
 
 [data-theme="glassy"] .content-header {
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--glass-bg-light);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid var(--glass-border-lighter);
 }
 
 [data-theme="glassy"] .service-item,
 [data-theme="glassy"] .stat {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--glass-bg-lighter);
+    border: 1px solid var(--glass-border-lighter);
 }
 
 [data-theme="glassy"] th {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--glass-bg-lighter);
 }
 
 [data-theme="glassy"] .nav-item.active {
     background: linear-gradient(135deg, rgba(124, 58, 237, 0.6), rgba(236, 72, 153, 0.6));
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--glass-blur-xs));
+    -webkit-backdrop-filter: blur(var(--glass-blur-xs));
 }
 
 /* Reset and Base Styles */
@@ -1110,7 +1117,13 @@ tbody tr:hover {
         transform: translateX(0);
     }
     
+    /* On mobile, collapsed sidebar stays hidden - no toggle needed */
     .sidebar.collapsed {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.collapsed.open {
+        transform: translateX(0);
         width: 260px;
     }
     
