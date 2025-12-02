@@ -184,6 +184,83 @@
     --gradient-end: #00ccff;
 }
 
+/* Glassy Theme - Glassmorphism Design */
+[data-theme="glassy"] {
+    --bg-primary: linear-gradient(135deg, #1a1a3e 0%, #2d1b4e 50%, #1a2a4a 100%);
+    --bg-secondary: rgba(255, 255, 255, 0.05);
+    --bg-card: rgba(255, 255, 255, 0.1);
+    --bg-card-hover: rgba(255, 255, 255, 0.15);
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-blur: 20px;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-on-accent: #1a1a3e;
+    --accent: #7c3aed;
+    --accent-hover: #a78bfa;
+    --accent-glow: rgba(124, 58, 237, 0.4);
+    --success: #34d399;
+    --success-glow: rgba(52, 211, 153, 0.3);
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --border: rgba(255, 255, 255, 0.15);
+    --shadow: rgba(0, 0, 0, 0.3);
+    --gradient-start: #7c3aed;
+    --gradient-end: #ec4899;
+}
+
+/* Glassy theme background needs special handling */
+[data-theme="glassy"] body {
+    background: linear-gradient(135deg, #1a1a3e 0%, #2d1b4e 50%, #1a2a4a 100%);
+    background-attachment: fixed;
+}
+
+[data-theme="glassy"] .app-container {
+    background: transparent;
+}
+
+[data-theme="glassy"] .sidebar {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="glassy"] .card,
+[data-theme="glassy"] .page-section,
+[data-theme="glassy"] .services-section,
+[data-theme="glassy"] .disks-section {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="glassy"] .content-header {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="glassy"] .service-item,
+[data-theme="glassy"] .stat {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="glassy"] th {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="glassy"] .nav-item.active {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.6), rgba(236, 72, 153, 0.6));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -218,8 +295,80 @@ body {
     flex-direction: column;
     position: fixed;
     height: 100vh;
-    transition: transform var(--transition-speed) ease, background-color var(--transition-speed) ease;
+    transition: width var(--transition-speed) ease, transform var(--transition-speed) ease, background-color var(--transition-speed) ease;
     z-index: 100;
+    overflow: hidden;
+}
+
+/* Collapsed sidebar state */
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar.collapsed .sidebar-header h1,
+.sidebar.collapsed .theme-selector,
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .version {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    padding: 24px 14px;
+}
+
+.sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 14px;
+}
+
+.sidebar.collapsed .nav-item.active::before {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-footer {
+    padding: 18px 14px;
+}
+
+/* Sidebar toggle button */
+.sidebar-toggle {
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: white;
+    box-shadow: 0 2px 8px var(--accent-glow);
+    transition: all 0.2s ease;
+    z-index: 101;
+}
+
+.sidebar-toggle:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.sidebar.collapsed .sidebar-toggle {
+    right: -14px;
+}
+
+.sidebar-toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-toggle-icon {
+    transform: rotate(180deg);
 }
 
 .sidebar-header {
@@ -387,6 +536,15 @@ body {
     display: flex;
     flex-direction: column;
     transition: margin-left var(--transition-speed) ease;
+    min-height: 100vh;
+    max-width: calc(100vw - 260px);
+    overflow-x: hidden;
+}
+
+/* Adjust main content when sidebar is collapsed */
+.sidebar.collapsed ~ .main-content {
+    margin-left: 70px;
+    max-width: calc(100vw - 70px);
 }
 
 /* Header */
@@ -464,6 +622,21 @@ body {
 .content {
     padding: 30px;
     flex: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Ensure all content sections stay within boundaries */
+.content > section,
+.content > .card-grid,
+.page-section,
+.services-section,
+.disks-section {
+    max-width: 100%;
+    overflow-x: auto;
+    box-sizing: border-box;
 }
 
 /* Card Grid */
@@ -930,14 +1103,29 @@ tbody tr:hover {
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
+        width: 260px;
     }
     
     .sidebar.open {
         transform: translateX(0);
     }
     
+    .sidebar.collapsed {
+        width: 260px;
+    }
+    
+    .sidebar-toggle {
+        display: none;
+    }
+    
     .main-content {
         margin-left: 0;
+        max-width: 100vw;
+    }
+    
+    .sidebar.collapsed ~ .main-content {
+        margin-left: 0;
+        max-width: 100vw;
     }
     
     .menu-toggle {
