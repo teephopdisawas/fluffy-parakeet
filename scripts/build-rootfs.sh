@@ -31,19 +31,29 @@ echo "Target: $ROOTFS_DIR"
 echo "Alpine Version: $ALPINE_VERSION"
 echo "Architecture: $ARCH"
 
-# Create directory structure
-mkdir -p "$ROOTFS_DIR"/{bin,sbin,etc,proc,sys,dev,tmp,var,usr,home,root,mnt/storage}
-mkdir -p "$ROOTFS_DIR"/etc/{nasbox,docker,samba,init.d}
-mkdir -p "$ROOTFS_DIR"/var/{log/nasbox,lib/docker,run}
+# Create directory structure efficiently using brace expansion
+# Base directories: bin, sbin, proc, sys, dev, tmp, usr, home, root
+# Config directories: etc/{nasbox,docker,samba,init.d}
+# Data directories: var/{log/nasbox,lib/docker,run}, mnt/storage
+mkdir -p "$ROOTFS_DIR"/{bin,sbin,etc/{nasbox,docker,samba,init.d},proc,sys,dev,tmp,var/{log/nasbox,lib/docker,run},usr,home,root,mnt/storage}
 
 # Download Alpine minirootfs
 MINIROOTFS="alpine-minirootfs-${ALPINE_VERSION}.0-${ALPINE_ARCH}.tar.gz"
 if [ ! -f "/tmp/$MINIROOTFS" ]; then
     echo "Downloading Alpine minirootfs..."
-    wget -q "${ALPINE_MIRROR}/v${ALPINE_VERSION}/releases/${ALPINE_ARCH}/${MINIROOTFS}" -O "/tmp/${MINIROOTFS}" || {
-        echo "Note: Could not download Alpine minirootfs (offline mode)"
-        echo "Creating minimal structure instead..."
-    }
+    # Use curl with resume capability and connection reuse for efficiency
+    if command -v curl &> /dev/null; then
+        curl -fsSL --retry 3 --retry-delay 2 -C - -o "/tmp/${MINIROOTFS}" \
+            "${ALPINE_MIRROR}/v${ALPINE_VERSION}/releases/${ALPINE_ARCH}/${MINIROOTFS}" 2>/dev/null || {
+            echo "Note: Could not download Alpine minirootfs (network error or offline)"
+            echo "Creating minimal structure instead..."
+        }
+    else
+        wget -q --tries=3 --continue "${ALPINE_MIRROR}/v${ALPINE_VERSION}/releases/${ALPINE_ARCH}/${MINIROOTFS}" -O "/tmp/${MINIROOTFS}" || {
+            echo "Note: Could not download Alpine minirootfs (network error or offline)"
+            echo "Creating minimal structure instead..."
+        }
+    fi
 fi
 
 # Extract if downloaded

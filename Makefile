@@ -1,5 +1,9 @@
 # NASBox Build System
 # Lightweight Linux Distribution for NAS
+# Optimized with parallel build support
+
+# Enable parallel job execution by default
+MAKEFLAGS += --jobs=4
 
 .PHONY: all build clean iso rootfs kernel docker-setup gui install test help setup-dirs
 
@@ -94,8 +98,11 @@ gui: rootfs
 	@./scripts/build-gui.sh $(ROOTFS_DIR)
 	@echo "$(GREEN)GUI built successfully$(NC)"
 
-# Complete build
-build: rootfs kernel docker-setup gui
+# Complete build - kernel can be built in parallel with rootfs
+# docker-setup and gui depend on rootfs, so they run after
+build: setup-dirs
+	@$(MAKE) rootfs kernel
+	@$(MAKE) docker-setup gui
 	@echo "$(GREEN)Finalizing build...$(NC)"
 	@./scripts/finalize-build.sh $(BUILD_DIR)
 	@echo "$(GREEN)Build completed successfully!$(NC)"
