@@ -184,6 +184,90 @@
     --gradient-end: #00ccff;
 }
 
+/* Glassy Theme - Glassmorphism Design */
+[data-theme="glassy"] {
+    --bg-primary: #1a1a3e;
+    --bg-gradient: linear-gradient(135deg, #1a1a3e 0%, #2d1b4e 50%, #1a2a4a 100%);
+    --bg-secondary: rgba(255, 255, 255, 0.05);
+    --bg-card: rgba(255, 255, 255, 0.1);
+    --bg-card-hover: rgba(255, 255, 255, 0.15);
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-bg-light: rgba(255, 255, 255, 0.06);
+    --glass-bg-lighter: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-border-light: rgba(255, 255, 255, 0.15);
+    --glass-border-lighter: rgba(255, 255, 255, 0.1);
+    --glass-blur: 20px;
+    --glass-blur-sm: 16px;
+    --glass-blur-xs: 10px;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-on-accent: #1a1a3e;
+    --accent: #7c3aed;
+    --accent-hover: #a78bfa;
+    --accent-glow: rgba(124, 58, 237, 0.4);
+    --success: #34d399;
+    --success-glow: rgba(52, 211, 153, 0.3);
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --border: rgba(255, 255, 255, 0.15);
+    --shadow: rgba(0, 0, 0, 0.3);
+    --gradient-start: #7c3aed;
+    --gradient-end: #ec4899;
+}
+
+/* Glassy theme background needs special handling */
+[data-theme="glassy"] body {
+    background: var(--bg-gradient);
+    background-attachment: fixed;
+}
+
+[data-theme="glassy"] .app-container {
+    background: transparent;
+}
+
+[data-theme="glassy"] .sidebar {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-right: 1px solid var(--glass-border-light);
+    box-shadow: 0 8px 32px var(--shadow);
+}
+
+[data-theme="glassy"] .card,
+[data-theme="glassy"] .page-section,
+[data-theme="glassy"] .services-section,
+[data-theme="glassy"] .disks-section {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur-sm));
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+    border: 1px solid var(--glass-border-light);
+    box-shadow: 0 8px 32px var(--shadow);
+}
+
+[data-theme="glassy"] .content-header {
+    background: var(--glass-bg-light);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid var(--glass-border-lighter);
+}
+
+[data-theme="glassy"] .service-item,
+[data-theme="glassy"] .stat {
+    background: var(--glass-bg-lighter);
+    border: 1px solid var(--glass-border-lighter);
+}
+
+[data-theme="glassy"] th {
+    background: var(--glass-bg-lighter);
+}
+
+[data-theme="glassy"] .nav-item.active {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.6), rgba(236, 72, 153, 0.6));
+    backdrop-filter: blur(var(--glass-blur-xs));
+    -webkit-backdrop-filter: blur(var(--glass-blur-xs));
+}
+
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -218,8 +302,80 @@ body {
     flex-direction: column;
     position: fixed;
     height: 100vh;
-    transition: transform var(--transition-speed) ease, background-color var(--transition-speed) ease;
+    transition: width var(--transition-speed) ease, transform var(--transition-speed) ease, background-color var(--transition-speed) ease;
     z-index: 100;
+    overflow: hidden;
+}
+
+/* Collapsed sidebar state */
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar.collapsed .sidebar-header h1,
+.sidebar.collapsed .theme-selector,
+.sidebar.collapsed .nav-text,
+.sidebar.collapsed .version {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    padding: 24px 14px;
+}
+
+.sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 14px;
+}
+
+.sidebar.collapsed .nav-item.active::before {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-footer {
+    padding: 18px 14px;
+}
+
+/* Sidebar toggle button */
+.sidebar-toggle {
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: white;
+    box-shadow: 0 2px 8px var(--accent-glow);
+    transition: all 0.2s ease;
+    z-index: 101;
+}
+
+.sidebar-toggle:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.sidebar.collapsed .sidebar-toggle {
+    right: -14px;
+}
+
+.sidebar-toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-toggle-icon {
+    transform: rotate(180deg);
 }
 
 .sidebar-header {
@@ -387,6 +543,15 @@ body {
     display: flex;
     flex-direction: column;
     transition: margin-left var(--transition-speed) ease;
+    min-height: 100vh;
+    max-width: calc(100vw - 260px);
+    overflow-x: hidden;
+}
+
+/* Adjust main content when sidebar is collapsed */
+.sidebar.collapsed ~ .main-content {
+    margin-left: 70px;
+    max-width: calc(100vw - 70px);
 }
 
 /* Header */
@@ -464,6 +629,21 @@ body {
 .content {
     padding: 30px;
     flex: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Ensure all content sections stay within boundaries */
+.content > section,
+.content > .card-grid,
+.page-section,
+.services-section,
+.disks-section {
+    max-width: 100%;
+    overflow-x: auto;
+    box-sizing: border-box;
 }
 
 /* Card Grid */
@@ -930,14 +1110,35 @@ tbody tr:hover {
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
+        width: 260px;
     }
     
     .sidebar.open {
         transform: translateX(0);
     }
     
+    /* On mobile, collapsed sidebar stays hidden - no toggle needed */
+    .sidebar.collapsed {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.collapsed.open {
+        transform: translateX(0);
+        width: 260px;
+    }
+    
+    .sidebar-toggle {
+        display: none;
+    }
+    
     .main-content {
         margin-left: 0;
+        max-width: 100vw;
+    }
+    
+    .sidebar.collapsed ~ .main-content {
+        margin-left: 0;
+        max-width: 100vw;
     }
     
     .menu-toggle {

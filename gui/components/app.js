@@ -6,7 +6,7 @@
 
 class NASBoxApp {
     // Allowed theme values for security
-    static ALLOWED_THEMES = ['dark', 'light', 'ocean', 'forest', 'sunset', 'midnight', 'contrast'];
+    static ALLOWED_THEMES = ['dark', 'light', 'glassy', 'ocean', 'forest', 'sunset', 'midnight', 'contrast'];
     
     // Cache for DOM elements and API responses
     static CACHE_TTL = 5000; // 5 seconds cache TTL
@@ -16,6 +16,8 @@ class NASBoxApp {
         // Validate theme from localStorage against allowed values
         const storedTheme = localStorage.getItem('nasbox-theme');
         this.theme = NASBoxApp.ALLOWED_THEMES.includes(storedTheme) ? storedTheme : 'dark';
+        // Restore sidebar collapsed state
+        this.sidebarCollapsed = localStorage.getItem('nasbox-sidebar-collapsed') === 'true';
         this.apiBase = '/api/v1';
         this.cache = new Map();
         this.elementCache = new Map();
@@ -25,9 +27,28 @@ class NASBoxApp {
 
     init() {
         this.applyTheme(this.theme);
+        this.applySidebarState();
         this.bindEvents();
         this.startSystemMonitoring();
         this.loadPage(this.currentPage);
+    }
+    
+    // Apply sidebar collapsed state
+    applySidebarState() {
+        const sidebar = this.getElement('sidebar');
+        if (sidebar && this.sidebarCollapsed) {
+            sidebar.classList.add('collapsed');
+        }
+    }
+    
+    // Toggle sidebar collapsed state
+    toggleSidebar() {
+        const sidebar = this.getElement('sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('collapsed');
+            this.sidebarCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('nasbox-sidebar-collapsed', this.sidebarCollapsed.toString());
+        }
     }
     
     // Cached getElementById for frequently accessed elements
@@ -75,6 +96,14 @@ class NASBoxApp {
         if (themeSelect) {
             themeSelect.addEventListener('change', (e) => {
                 this.setTheme(e.target.value);
+            });
+        }
+
+        // Sidebar toggle button
+        const sidebarToggle = this.getElement('sidebarToggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                this.toggleSidebar();
             });
         }
 
