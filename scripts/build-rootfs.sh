@@ -31,7 +31,10 @@ echo "Target: $ROOTFS_DIR"
 echo "Alpine Version: $ALPINE_VERSION"
 echo "Architecture: $ARCH"
 
-# Create directory structure in a single mkdir call for efficiency
+# Create directory structure efficiently using brace expansion
+# Base directories: bin, sbin, proc, sys, dev, tmp, usr, home, root
+# Config directories: etc/{nasbox,docker,samba,init.d}
+# Data directories: var/{log/nasbox,lib/docker,run}, mnt/storage
 mkdir -p "$ROOTFS_DIR"/{bin,sbin,etc/{nasbox,docker,samba,init.d},proc,sys,dev,tmp,var/{log/nasbox,lib/docker,run},usr,home,root,mnt/storage}
 
 # Download Alpine minirootfs
@@ -42,12 +45,12 @@ if [ ! -f "/tmp/$MINIROOTFS" ]; then
     if command -v curl &> /dev/null; then
         curl -fsSL --retry 3 --retry-delay 2 -C - -o "/tmp/${MINIROOTFS}" \
             "${ALPINE_MIRROR}/v${ALPINE_VERSION}/releases/${ALPINE_ARCH}/${MINIROOTFS}" 2>/dev/null || {
-            echo "Note: Could not download Alpine minirootfs (offline mode)"
+            echo "Note: Could not download Alpine minirootfs (network error or offline)"
             echo "Creating minimal structure instead..."
         }
     else
         wget -q --tries=3 --continue "${ALPINE_MIRROR}/v${ALPINE_VERSION}/releases/${ALPINE_ARCH}/${MINIROOTFS}" -O "/tmp/${MINIROOTFS}" || {
-            echo "Note: Could not download Alpine minirootfs (offline mode)"
+            echo "Note: Could not download Alpine minirootfs (network error or offline)"
             echo "Creating minimal structure instead..."
         }
     fi
