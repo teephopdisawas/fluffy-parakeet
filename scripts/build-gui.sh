@@ -161,14 +161,16 @@ class NASBoxAPI(BaseHTTPRequestHandler):
     def _get_memory_usage(self):
         try:
             with open('/proc/meminfo', 'r') as f:
-                lines = f.readlines()
-            mem = {}
-            for line in lines:
-                parts = line.split(':')
-                if len(parts) == 2:
-                    key = parts[0].strip()
-                    value = int(parts[1].strip().split()[0])
-                    mem[key] = value
+                mem = {}
+                # Only read lines we need for efficiency
+                for line in f:
+                    if line.startswith(('MemTotal:', 'MemAvailable:')):
+                        parts = line.split(':')
+                        key = parts[0].strip()
+                        value = int(parts[1].strip().split()[0])
+                        mem[key] = value
+                        if len(mem) == 2:
+                            break
             total = mem.get('MemTotal', 1)
             available = mem.get('MemAvailable', 0)
             used = total - available

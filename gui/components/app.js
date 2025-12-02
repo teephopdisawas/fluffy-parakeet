@@ -1,12 +1,15 @@
 /**
  * NASBox GUI - Main Application JavaScript
  * Lightweight management interface for NAS
- * Modern multi-theme support
+ * Modern multi-theme support with optimized performance
  */
 
 class NASBoxApp {
     // Allowed theme values for security
     static ALLOWED_THEMES = ['dark', 'light', 'ocean', 'forest', 'sunset', 'midnight', 'contrast'];
+    
+    // Cache for DOM elements and API responses
+    static CACHE_TTL = 5000; // 5 seconds cache TTL
     
     constructor() {
         this.currentPage = 'dashboard';
@@ -14,6 +17,9 @@ class NASBoxApp {
         const storedTheme = localStorage.getItem('nasbox-theme');
         this.theme = NASBoxApp.ALLOWED_THEMES.includes(storedTheme) ? storedTheme : 'dark';
         this.apiBase = '/api/v1';
+        this.cache = new Map();
+        this.elementCache = new Map();
+        this.monitoringInterval = null;
         this.init();
     }
 
@@ -23,6 +29,23 @@ class NASBoxApp {
         this.startSystemMonitoring();
         this.loadPage(this.currentPage);
     }
+    
+    // Cached getElementById for frequently accessed elements
+    getElement(id) {
+        if (!this.elementCache.has(id)) {
+            this.elementCache.set(id, document.getElementById(id));
+        }
+        return this.elementCache.get(id);
+    }
+    
+    // Debounce utility for performance-sensitive operations
+    debounce(func, wait) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
 
     // Theme Management
     applyTheme(theme) {
@@ -31,7 +54,7 @@ class NASBoxApp {
             theme = 'dark';
         }
         document.documentElement.setAttribute('data-theme', theme);
-        const themeSelect = document.getElementById('themeSelect');
+        const themeSelect = this.getElement('themeSelect');
         if (themeSelect) {
             themeSelect.value = theme;
         }
@@ -47,60 +70,68 @@ class NASBoxApp {
 
     // Event Bindings
     bindEvents() {
-        // Theme selector dropdown
-        const themeSelect = document.getElementById('themeSelect');
+        // Theme selector dropdown - use cached element
+        const themeSelect = this.getElement('themeSelect');
         if (themeSelect) {
             themeSelect.addEventListener('change', (e) => {
                 this.setTheme(e.target.value);
             });
         }
 
-        // Mobile menu toggle
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.getElementById('sidebar');
+        // Mobile menu toggle - use cached elements
+        const menuToggle = this.getElement('menuToggle');
+        const sidebar = this.getElement('sidebar');
         if (menuToggle && sidebar) {
             menuToggle.addEventListener('click', () => {
                 sidebar.classList.toggle('open');
             });
         }
 
-        // Navigation
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const page = item.dataset.page;
-                this.navigateTo(page);
+        // Navigation - use event delegation for efficiency
+        const navMenu = document.querySelector('.nav-menu');
+        if (navMenu) {
+            navMenu.addEventListener('click', (e) => {
+                const navItem = e.target.closest('.nav-item');
+                if (navItem) {
+                    const page = navItem.dataset.page;
+                    this.navigateTo(page);
+                }
             });
-        });
+        }
 
-        // Service buttons
-        document.querySelectorAll('.service-item .btn-small').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const serviceName = e.target.closest('.service-item').querySelector('.service-name').textContent;
-                const action = e.target.textContent.toLowerCase();
-                this.controlService(serviceName, action);
+        // Service buttons - use event delegation for efficiency
+        const servicesSection = document.querySelector('.services-section');
+        if (servicesSection) {
+            servicesSection.addEventListener('click', (e) => {
+                if (e.target.classList.contains('btn-small')) {
+                    const serviceItem = e.target.closest('.service-item');
+                    if (serviceItem) {
+                        const serviceName = serviceItem.querySelector('.service-name').textContent;
+                        const action = e.target.textContent.toLowerCase();
+                        this.controlService(serviceName, action);
+                    }
+                }
             });
-        });
+        }
     }
 
     // Navigation
     navigateTo(page) {
-        // Update active state
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-            if (item.dataset.page === page) {
-                item.classList.add('active');
-            }
+        // Update active state - use single querySelectorAll and cache result
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            const isActive = item.dataset.page === page;
+            item.classList.toggle('active', isActive);
         });
 
-        // Update title
-        const pageTitle = document.getElementById('pageTitle');
+        // Update title - use cached element
+        const pageTitle = this.getElement('pageTitle');
         if (pageTitle) {
             pageTitle.textContent = page.charAt(0).toUpperCase() + page.slice(1);
         }
 
-        // Close mobile menu
-        const sidebar = document.getElementById('sidebar');
+        // Close mobile menu - use cached element
+        const sidebar = this.getElement('sidebar');
         if (sidebar) {
             sidebar.classList.remove('open');
         }
@@ -111,7 +142,7 @@ class NASBoxApp {
 
     // Page Loading
     async loadPage(page) {
-        const content = document.getElementById('content');
+        const content = this.getElement('content');
         if (!content) return;
 
         switch (page) {
@@ -147,9 +178,22 @@ class NASBoxApp {
 
     // System Monitoring
     startSystemMonitoring() {
-        // Update every 5 seconds
+        // Clear any existing interval to prevent memory leaks
+        if (this.monitoringInterval) {
+            clearInterval(this.monitoringInterval);
+        }
+        // Update immediately
         this.updateSystemStats();
-        setInterval(() => this.updateSystemStats(), 5000);
+        // Update every 5 seconds
+        this.monitoringInterval = setInterval(() => this.updateSystemStats(), 5000);
+    }
+    
+    // Stop monitoring when page is hidden to save resources
+    stopSystemMonitoring() {
+        if (this.monitoringInterval) {
+            clearInterval(this.monitoringInterval);
+            this.monitoringInterval = null;
+        }
     }
 
     async updateSystemStats() {
@@ -158,19 +202,24 @@ class NASBoxApp {
             // For demo, using simulated values
             const stats = await this.getSystemStats();
             
-            this.updateProgressRing('cpuValue', stats.cpu);
-            this.updateProgressRing('memValue', stats.memory);
-            this.updateProgressRing('storageValue', stats.storage);
-            
-            document.getElementById('netDown').textContent = stats.networkDown;
-            document.getElementById('netUp').textContent = stats.networkUp;
+            // Batch DOM updates for efficiency
+            requestAnimationFrame(() => {
+                this.updateProgressRing('cpuValue', stats.cpu);
+                this.updateProgressRing('memValue', stats.memory);
+                this.updateProgressRing('storageValue', stats.storage);
+                
+                const netDown = this.getElement('netDown');
+                const netUp = this.getElement('netUp');
+                if (netDown) netDown.textContent = stats.networkDown;
+                if (netUp) netUp.textContent = stats.networkUp;
+            });
         } catch (error) {
             console.error('Failed to update system stats:', error);
         }
     }
 
     updateProgressRing(elementId, value) {
-        const element = document.getElementById(elementId);
+        const element = this.getElement(elementId);
         if (element) {
             element.textContent = `${value}%`;
             const ring = element.closest('.progress-ring');
@@ -181,17 +230,28 @@ class NASBoxApp {
     }
 
     async getSystemStats() {
-        // API call would go here
+        // Check cache first
+        const cacheKey = 'systemStats';
+        const cached = this.cache.get(cacheKey);
+        if (cached && (Date.now() - cached.timestamp < NASBoxApp.CACHE_TTL)) {
+            return cached.data;
+        }
+        
+        // API call would go here in production
         // return await fetch(`${this.apiBase}/system/stats`).then(r => r.json());
         
         // Demo values with slight random variation
-        return {
+        const stats = {
             cpu: Math.floor(20 + Math.random() * 15),
             memory: Math.floor(40 + Math.random() * 10),
             storage: 62,
             networkDown: `${Math.floor(100 + Math.random() * 50)} MB/s`,
             networkUp: `${Math.floor(30 + Math.random() * 30)} MB/s`
         };
+        
+        // Cache the result
+        this.cache.set(cacheKey, { data: stats, timestamp: Date.now() });
+        return stats;
     }
 
     // Service Control
@@ -207,7 +267,7 @@ class NASBoxApp {
 
     // Page Templates
     loadStoragePage() {
-        const content = document.getElementById('content');
+        const content = this.getElement('content');
         content.innerHTML = `
             <section class="page-section">
                 <div class="section-header">
@@ -255,7 +315,7 @@ class NASBoxApp {
     }
 
     loadSharesPage() {
-        const content = document.getElementById('content');
+        const content = this.getElement('content');
         content.innerHTML = `
             <section class="page-section">
                 <div class="section-header">
@@ -303,7 +363,7 @@ class NASBoxApp {
     }
 
     loadDockerPage() {
-        const content = document.getElementById('content');
+        const content = this.getElement('content');
         content.innerHTML = `
             <section class="page-section">
                 <div class="section-header">
@@ -381,7 +441,7 @@ class NASBoxApp {
     }
 
     loadNetworkPage() {
-        const content = document.getElementById('content');
+        const content = this.getElement('content');
         content.innerHTML = `
             <section class="page-section">
                 <div class="section-header">
@@ -421,7 +481,7 @@ class NASBoxApp {
     }
 
     loadUsersPage() {
-        const content = document.getElementById('content');
+        const content = this.getElement('content');
         content.innerHTML = `
             <section class="page-section">
                 <div class="section-header">
@@ -483,7 +543,7 @@ class NASBoxApp {
     }
 
     loadSystemPage() {
-        const content = document.getElementById('content');
+        const content = this.getElement('content');
         content.innerHTML = `
             <section class="page-section">
                 <div class="section-header">
